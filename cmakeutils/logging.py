@@ -1,7 +1,7 @@
 #
 #   pycmake Debug Logging
 #
-#   Copyright (c) 2023 Jppgmx
+#   Copyright (c) 2023 jppgmx
 #   Licensed under MIT License
 #
 

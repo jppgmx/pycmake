@@ -1,7 +1,7 @@
 #
 #   Windows Kernel32 Basic Implementation
 #
-#   Copyright (C) 2023 Jppgmx
+#   Copyright (C) 2023 jppgmx
 #   Licensed under MIT License
 #
 import cmakeutils.platcheck as pc
