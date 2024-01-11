@@ -27,7 +27,7 @@ def loginit(logfile: str):
         Starts logging system.
     """
 
-    global __initialized__
+    global __initialized__ # pylint: disable-msg=W0603
     if __initialized__:
         return
 
@@ -46,7 +46,7 @@ def loginit(logfile: str):
             ]
         )
 
-    global __loggers__
+    global __loggers__ # pylint: disable-msg=W0603
     __loggers__ = {}
     __initialized__ = True
     log('Logging started!')
@@ -65,7 +65,7 @@ def log(msg, level: int = INFO, modulefile: str = None):
     moduleobj = __find_module_from_file(module)
     modulepackage = 'unnamed' if len(moduleobj.__package__) == 0 else moduleobj.__package__
 
-    global __loggers__
+    global __loggers__ # pylint: disable-msg=W0602
     if not modulename in __loggers__:
         # Setup logger
         __loggers__[modulename] = logging.getLogger(modulename)
