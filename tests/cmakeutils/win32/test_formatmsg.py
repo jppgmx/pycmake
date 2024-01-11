@@ -1,9 +1,8 @@
 import cmakeutils.win32.kernel32 as krnl
-import cmakeutils.win32.winconstants as wc
 
 def test_formatmsg():
     expected = 'Hello World in Python using FormatMessage!'
-    toFormat = '%1 %2 in Py%3 using %4Message%!'
+    toformat = '%1 %2 in Py%3 using %4Message%!'
     args = [
         'Hello',
         'World',
@@ -11,10 +10,10 @@ def test_formatmsg():
         'Format'
     ]
 
-    formatedString = krnl.FormatMessage(
+    formatedstring = krnl.FormatMessage(
         krnl.FormatSource.FS_STRING,
-        srcInput=toFormat,
+        srcinput=toformat,
         args=args
         )
-    
-    assert (expected.lower()) == (formatedString.lower())
+
+    assert (expected.lower()) == (formatedstring.lower())

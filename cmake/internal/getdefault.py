@@ -10,11 +10,12 @@ import os
 import re
 
 from subprocess import Popen, PIPE
-import cmake
+from cmake import options
+from cmake import cmake
 
 from cmakeutils import platcheck as pc, win32, logging as internal_logger
 
-def cmake_get_default(options: cmake.options.CMakeInitOptions):
+def cmake_get_default(_options: options.CMakeInitOptions):
     """
         Searches for cmake.
     """
@@ -33,12 +34,12 @@ def cmake_get_default(options: cmake.options.CMakeInitOptions):
     System Path List Separator = {pathsep}
     Executable Extension = {exec_ext}""")
     internal_logger.log(f'The filename will be "{exec_name}"')
-    cmake_path = __internalsearchpath(exec_name, options.cmakepath)
+    cmake_path = __internalsearchpath(exec_name, _options.cmakepath)
     internal_logger.log('The search was successful and the path to' +
                         f' the supposed cmake executable is "{cmake_path}"')
 
     if (test_exec_result := __testexec(cmake_path))[0]:
-        default = cmake.CMake(cmake_path, test_exec_result[1])
+        default = cmake.CMakeInst(cmake_path, test_exec_result[1])
 
     return default
 
