@@ -15,6 +15,12 @@
     SearchPath
 """
 
+#
+#   The kernel32 module is suppressing some Pylint messages
+#   because both this module and any other module that implements a Windows function will use
+#   Windows naming conventions instead of what Pylint suggests.
+#
+
 import ctypes as ct
 import ctypes.wintypes as wt
 
@@ -123,7 +129,7 @@ def FormatMessage(source: FormatSource, srcinput: (str | ct.WinDLL) = None,
         if not isinstance(srcinput, ct.WinDLL):
             raise ValueError('Expected a WinDLL at srcInput.')
 
-        lpc_source = wt.LPCVOID(srcinput._handle)
+        lpc_source = wt.LPCVOID(srcinput._handle) # pylint: disable-msg=W0212
 
     elif source == FormatSource.FS_STRING:
         if not isinstance(srcinput, str):

@@ -5,6 +5,12 @@
    Licensed under MIT License
 """
 
+#
+#   The winconstants module is suppressing some Pylint messages
+#   because both this module and any other module that implements a Windows function will use
+#   Windows naming conventions instead of what Pylint suggests.
+#
+
 from enum import IntFlag
 from sys import maxsize
 
