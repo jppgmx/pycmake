@@ -1,3 +1,5 @@
+# pylint: disable-msg=C0103
+# pylint: disable-msg=R0914
 """
    Windows Kernel32 Basic Implementation
 

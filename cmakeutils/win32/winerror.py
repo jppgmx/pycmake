@@ -1,3 +1,5 @@
+# pylint: disable-msg=C0302
+# pylint: disable-msg=C0103
 """
    Windows System Error Codes
 

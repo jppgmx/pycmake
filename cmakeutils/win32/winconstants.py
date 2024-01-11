@@ -10,11 +10,11 @@ from sys import maxsize
 
 import ctypes as ct
 
-SIZE_T = ct.c_size_t
+SIZE_T = ct.c_size_t # pylint: disable-msg=C0103
 VALIST = ct.POINTER( ct.c_char )
 LPVALIST = ct.POINTER(VALIST)
 
-DWORD_PTR = ct.c_ulonglong if maxsize > 2**32 else ct.c_uint
+DWORD_PTR = ct.c_ulonglong if maxsize > 2**32 else ct.c_uint # pylint: disable-msg=C0103
 
 MAX_PATH: int = 260
 
