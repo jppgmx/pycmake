@@ -12,7 +12,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name='pycmake',
-    version='0.0.1',
+    version='1.0.0',
     author='jppgmx',
     author_email='',
     packages=find_packages(exclude='tests'),
