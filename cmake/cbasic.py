@@ -1,40 +1,52 @@
-#
-#   pycmake CMake Basic types
-#
-#   Copyright (C) 2023 jppgmx
-#   Licensed under MIT License
-#
+"""
+    pycmake cbasic module
+    --------------------
 
-import os
-import builtins as btin
+    Copyright (C) 2023 jppgmx
+    Licensed under MIT License
+
+    It contains a class that encapsulates the data and its types, 
+    which are String and Bool, in addition to VarDict, which is a type to encapsulate a dictionary.
+
+
+"""
+from enum import Enum
 
 from cmakeutils.typecheck import isdict
-from enum import Enum
-from pathlib import Path
+
 
 class CMakeValType(Enum):
+    """
+        Determines the type that CMakeValue carries.
+    """
+
     BOOL = 1
     STRING = 2
 
-    # Non-official types
+    # Non-official cmake types
     VARDICT = 3
 
+
 class CMakeValue:
+
+    """
+        Encapsulates a value.
+    """
     value = None
     type: CMakeValType
 
     def __init__(self, value):
-        vType = type(value)
-        if vType is not str and vType is not bool and not isdict(value, str, CMakeValue):
-            raise ValueError('Invalid value type: ' + str(vType))
+        vtype = type(value)
+        if vtype is not str and vtype is not bool and not isdict(value, str, CMakeValue):
+            raise ValueError('Invalid value type: ' + str(vtype))
 
         self.value = value
 
-        if vType is str:
+        if vtype is str:
             self.type = CMakeValType.STRING
-        elif vType is bool:
+        elif vtype is bool:
             self.type = CMakeValType.BOOL
         elif isdict(value, str, CMakeValue):
             self.type = CMakeValType.VARDICT
         else:
-            raise ValueError('Value not supported -> ' + str(vType))
+            raise ValueError('Value not supported -> ' + str(vtype))

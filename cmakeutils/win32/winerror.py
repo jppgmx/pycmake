@@ -1,13 +1,17 @@
-#
-#   Windows System Error Codes
-#
-#   Copyright (C) 2023 jppgmx
-#   Licensed under MIT License
-#
+"""
+   Windows System Error Codes
+
+   Copyright (C) 2023 jppgmx
+   Licensed under MIT License
+"""
 
 from enum import Enum
 
-class _Win32ErrorCodes(Enum):
+class Win32ErrorCodes(Enum):
+    """
+        Contains all the system error codes.
+    """
+
     ERROR_SUCCESS = 0
     ERROR_INVALID_FUNCTION = 1
     ERROR_FILE_NOT_FOUND = 2

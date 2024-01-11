@@ -1,78 +1,97 @@
-#
-#   pycmake CMake Instance
-#
-#   Copyright (C) 2023 jppgmx
-#   Licensed under MIT License
-#
+"""
+   pycmake CMake Instance
 
-import cmake.ccmd as cc
-import subprocess as sp
-import os
-import random
+   Copyright (C) 2023 jppgmx
+   Licensed under MIT License
+
+   The module defines all the logic for using cmake.
+"""
 
 from abc import ABC, abstractmethod
 from threading import Thread
+
+import subprocess as sp
+import os
+import random
+import cmake.ccmd as cc
 
 from cmakeutils import logging as internal_logger
 
 from cmake.options import CMakeRawOptions
 
-class _cmakeworker(ABC):
+class CMakeWorker(ABC):
+    """
+        Represents a listener to receive events during cmake invocation.
+    """
+
     id: int
 
     def __init__(self):
         self.id = random.randint(1, 999)
 
     @abstractmethod
-    def onProcess(self, totalLines: list[str], currentLn: str):
-        pass
+    def onprocess(self, totallines: list[str], currentln: str):
+        """
+            Gets the current line and all lines from stdout.
+        """
 
     @abstractmethod
-    def onError(self, totalLines: list[str], currentLn: str):
-        pass
+    def onerror(self, totallines: list[str], currentln: str):
+        """
+            Gets the current line and all lines from stderr with filter for errors.
+        """
 
     @abstractmethod
-    def onWarn(self, totalLines: list[str], currentLn: str):
-        pass
+    def onwarn(self, totallines: list[str], currentln: str):
+        """
+            Gets the current line and all lines from stderr with filter for warnings.
+        """
 
     @abstractmethod
-    def returnCode(self, code: int):
-        pass
+    def retcode(self, code: int):
+        """
+            Gets the executable's return code.
+        """
 
-class _cmakeinst:
+class CMakeInst:
     """
     Represents an instance of cmake.
-    Note: attributes with a "scope" prefix are used PER CALL, i.e. after an invoke call, they are reset.
+    Note: attributes with a "scope" prefix are used PER CALL,
+        i.e. after an invoke call, they are reset.
     """
 
-    executablePath: str = None
+    executablepath: str = None
     environ: dict[str, str] = None
     version: str
 
-    scopeWorkers: list[_cmakeworker] = []
-    scopeEnviron: dict[str, str] = {}
-    scopePaths: list[str] = []
-    
-    def __init__(self, executablePath: str, version: str):
-        self.executablePath = executablePath
+    scopeworkers: list[CMakeWorker] = []
+    scopeenviron: dict[str, str] = {}
+    scopepaths: list[str] = []
+
+    def __init__(self, executablepath: str, version: str):
+        self.executablepath = executablepath
         self.environ = os.environ
         self.version = version
 
-    def invoke(self, command: cc.CMakeCommand, rawArgs: CMakeRawOptions = CMakeRawOptions()):
+    def invoke(self, command: cc.CMakeCommand, rawargs: CMakeRawOptions = CMakeRawOptions()):
+        """
+            Invokes the cmake instance with the specified command.
+        """
         args: list[str] = None
-        
+
         internal_logger.log('Validating arguments...')
         command.validate()
-        args = [self.executablePath]
+        args = [self.executablepath]
         args += command.compile()
-        args += rawArgs.args
+        args += rawargs.args
 
-        env = {**self.environ, **(self.scopeEnviron if self.scopeEnviron != None else {})}
+        env = {**self.environ, **(self.scopeenviron if self.scopeenviron is not None else {})}
 
-        spaths = self.scopePaths if self.scopePaths != None else []
-        newPaths = f'{env['PATH']}{os.pathsep}{os.pathsep.join(spaths)}'
-        env['PATH'] = newPaths
-        internal_logger.log('Invoking cmake executable with arguments: \n[\n    ' + '\n    '.join(args) + '\n]')
+        spaths = self.scopepaths if self.scopepaths is not None else []
+        newpaths = f'{env['PATH']}{os.pathsep}{os.pathsep.join(spaths)}'
+        env['PATH'] = newpaths
+        internal_logger.log('Invoking cmake executable with arguments: \n[\n    ' +
+                            '\n    '.join(args) + '\n]')
         proc = sp.Popen(
             args, bufsize=1, stdout=sp.PIPE, stderr=sp.PIPE, env=env
         )
@@ -80,9 +99,9 @@ class _cmakeinst:
         stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
         stdprocessor = Thread(
             name=stdthreadname,
-            args=[proc, self.scopeWorkers, stdthreadname],
+            args=[proc, self.scopeworkers, stdthreadname],
             daemon=True,
-            target=self._doProcessOutputs
+            target=self.__doprocess_outputs
         )
 
         internal_logger.log('Starting ' + stdprocessor.name + ' and waiting executable finishes...')
@@ -91,110 +110,122 @@ class _cmakeinst:
         stdprocessor.join()
 
         internal_logger.log('Cleaning workers...')
-        self.scopeWorkers.clear()
+        self.scopeworkers.clear()
 
         internal_logger.log('Cleaning environ...')
-        self.scopeWorkers.clear()
+        self.scopeenviron.clear()
 
         internal_logger.log('Cleaning paths...')
-        self.scopePaths.clear()
+        self.scopepaths.clear()
 
         return self
 
-    def registerWorker(self, worker: _cmakeworker):
-        if self.scopeWorkers == None:
-            self.scopeWorkers = []
+    def registerworker(self, worker: CMakeWorker):
+        """
+            Registers a listener for the cmake invocation.
+        """
 
-        existingWorker = list(
+        if self.scopeworkers is None:
+            self.scopeworkers = []
+
+        existingworker = list(
             filter(
-                lambda wk: wk.id == worker.id, self.scopeWorkers
+                lambda wk: wk.id == worker.id, self.scopeworkers
             )
         )
-        
-        if len(existingWorker) == 0:
+
+        if len(existingworker) == 0:
             internal_logger.log(f'Registering a new worker (id {worker.id})')
-            self.scopeWorkers.append(worker)
+            self.scopeworkers.append(worker)
             return self
 
-        internal_logger.log(f'Worker (id {worker.id}) already registered!', internal_logger.WARN)
+        internal_logger.log(f'worker (id {worker.id}) already registered!', internal_logger.WARN)
 
         return self
 
-    def appendEnvVariables(self, envArgs: dict[str, str] = {}):
-        if envArgs == None:
+    def append_env_variables(self, envargs: dict[str, str] = None):
+        """
+            Adds extra variables to cmake.
+        """
+
+        if envargs is None:
             return self
-        if self.scopeEnviron == None:
-            self.scopeEnviron = {}
+        if self.scopeenviron is None:
+            self.scopeenviron = {}
 
 
-        for key, val in envArgs.items():
+        for key, val in envargs.items():
             if key.lower() == 'PATH'.lower():
                 raise ValueError('Not allowed: ' + key)
 
-            self[key] = val
+            self.scopeenviron[key] = val
 
         return self
-    
-    def appendPaths(self, paths: list[str] = []):
-        if paths == None:
-            return self
-        if self.scopePaths == None:
-            self.scopePaths = []
 
-        toAdd = []
+    def appendpaths(self, paths: list[str] = None):
+        """
+            Adds additional paths to the PATH variable temporarily.
+        """
+
+        if paths is None:
+            return self
+        if self.scopepaths is None:
+            self.scopepaths = []
+
+        toadd = []
 
         for path in paths:
-            for spath in self.scopePaths:
+            for spath in self.scopepaths:
                 if path.lower() != spath.lower():
-                    toAdd.append(path)
+                    toadd.append(path)
 
-        self.scopePaths += toAdd
+        self.scopepaths += toadd
 
         return self
 
-    def _doProcessOutputs(self, process: sp.Popen, workers, name):
+    def __doprocess_outputs(self, process: sp.Popen, workers, name):
 
-        stdoutLines = []
-        stderrLines = []
+        stdoutlines = []
+        stderrlines = []
 
         internal_logger.log(f'({name}) -> Listening output...')
 
-        stdoutLines = process.stdout.readlines()
-        stderrLines = process.stderr.readlines()
+        stdoutlines = process.stdout.readlines()
+        stderrlines = process.stderr.readlines()
 
-        outIter = iter(stdoutLines)
-        errIter = iter(stderrLines)
+        outiter = iter(stdoutlines)
+        erriter = iter(stderrlines)
 
-        while (outLine := next(outIter, None)) != None or (errLine := next(errIter, None)) != None:
+        while (outline := next(outiter, None)) is not None or (errline := next(erriter, None)) is not None:
 
-            if outLine == None:
-                outLine = b''
-            if errLine == None:
-                errLine = b''
-            
-            if outLine != b'':
-                internal_logger.log(f'({name}) -> {str(outLine)}')
-            if errLine != b'':
-                internal_logger.log(f'({name}) -> {str(errLine)}')
+            if outline is None:
+                outline = b''
+            if errline is None:
+                errline = b''
 
-            for wk in (workers if workers != None else []):
-                if outLine != b'':
-                    out = str(outLine)
+            if outline != b'':
+                internal_logger.log(f'({name}) -> {str(outline)}')
+            if errline != b'':
+                internal_logger.log(f'({name}) -> {str(errline)}')
 
-                    wk.onProcess(stdoutLines, out)
+            for wk in (workers if workers is not None else []):
+                if outline != b'':
+                    out = str(outline)
 
-                if errLine != b'':
-                    err = str(errLine)
+                    wk.onprocess(stdoutlines, out)
 
-                    onLevel = wk.onError if err.startswith('CMake Error:') else wk.onWarn
-                    onLevel(stderrLines, err)
+                if errline != b'':
+                    err = str(errline)
+
+                    onlevel = wk.onerror if err.startswith('CMake Error:') else wk.onwarn
+                    onlevel(stderrlines, err)
 
         internal_logger.log(f'({name}) -> Process ended with code {process.returncode}')
-        for wk in (workers if workers != None else []):
-            wk.returnCode(process.returncode)
+        for wk in (workers if workers is not None else []):
+            wk.retcode(process.returncode)
 
-        stdoutLines.clear()
-        stderrLines.clear()
+        stdoutlines.clear()
+        stderrlines.clear()
 
 
-__defaultCmake__: _cmakeinst = None
+__defaultCmake__: CMakeInst = None
