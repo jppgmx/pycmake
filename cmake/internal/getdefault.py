@@ -110,7 +110,7 @@ def __internalsearchpath(tofind: str, possiblepath: str):
             internal_logger.log('Make sure the executable is inside the PATH environment variable.',
                                 internal_logger.ERROR)
             internal_logger.log('The PATH variable contains the following:\n   ' +
-                                f'{"\n   ".join(paths)}')
+                                '\n   '.join(paths))
             raise err
 
     return result
