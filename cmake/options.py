@@ -4,25 +4,22 @@
    Copyright (c) 2023 jppgmx
    Licensed under MIT License
 """
+import dataclasses
 
 from abc import ABC, abstractmethod
 from cmake.cbasic import CMakeValType, CMakeValue
 
+@dataclasses.dataclass
 class CMakeInitOptions:
     """
         Represents a set of options to be passed when initializing pycmake.
     """
 
-    enablelogging: bool
-    logfile: str
-    cmakepath: str
+    enablelogging: bool = False
+    logfile: str = 'pycmake.log'
+    cmakepath: str = None
 
-    def __init__(self, enablelogging: bool = False,
-                logfile: str = 'pycmake.log', cmakepath: str = None) -> None:
-        self.enablelogging = enablelogging
-        self.logfile = logfile
-        self.cmakepath = cmakepath
-
+@dataclasses.dataclass
 class CMakeBaseOption(ABC):
     """
         Base class to implement cmake command options.
@@ -32,16 +29,7 @@ class CMakeBaseOption(ABC):
     cmdoption: str
     format: str
     type: CMakeValType
-
     default: CMakeValue = None
-
-    def __init__(self, name: str, cmd: str, fmt: str,
-                 tp: CMakeValType, default: str | bool | dict[str, CMakeValue]):
-        self.name = name
-        self.cmdoption = cmd
-        self.format = fmt
-        self.type = tp
-        self.default = CMakeValue(default)
 
     @abstractmethod
     def compile(self, value: CMakeValue) -> str | list[str]:
@@ -49,6 +37,7 @@ class CMakeBaseOption(ABC):
             Constructs the option with value in the form of a string or a list of strings.
         """
 
+@dataclasses.dataclass
 class CMakeSimpleOption(CMakeBaseOption):
     """
         Simple option. Example: -S source
@@ -75,19 +64,21 @@ class CMakeSimpleOption(CMakeBaseOption):
 
         return optstring
 
+@dataclasses.dataclass
 class CMakeOptionalSimpleOption(CMakeSimpleOption):
     """
         Optional simple option. Example: -A x64
     """
 
     def __init__(self, name: str, cmd: str, fmt: str, tp: CMakeValType):
-        super().__init__(name, cmd, format, type, None)
+        super().__init__(name, cmd, fmt, tp, None)
 
     def compile(self, value: CMakeValue) -> str | list[str]:
         if self.default is None:
             return []
         return super().compile(value)
 
+@dataclasses.dataclass
 class CMakeVariablesOption(CMakeBaseOption):
     """
         CMake configure variables. Example: -DFOO -DBAR ...
@@ -114,17 +105,19 @@ class CMakeVariablesOption(CMakeBaseOption):
             else:
                 raise ValueError(f'Variable {key} is empty!')
 
-            valstr = str(val.value).upper() if val.type == CMakeValType.BOOL else f'"{str(val.value)}"'
+            valstr = str(val.value)
+            valstr2 = valstr.upper() if val.type == CMakeValType.BOOL else f'"{valstr}"'
 
             vars.append( self.format.format(
                 option=self.cmdoption,
                 varname=key.upper(),
                 type=val.type.name.upper(),
-                value=valstr
+                value=valstr2
             ) )
 
         return vars
 
+@dataclasses.dataclass
 class CMakeSwitchOption(CMakeSimpleOption):
     """
         Switch option. Example: --verbose
@@ -142,7 +135,7 @@ class CMakeSwitchOption(CMakeSimpleOption):
 
         return super().compile(value)
 
-
+@dataclasses.dataclass
 class CMakeRawOptions:
     """
     NOTE: If there is an option that has a space between it and the value,
@@ -159,9 +152,11 @@ class CMakeRawOptions:
     """
     args: list[str]
 
-    def __init__(self, args: list[str] = []) -> None:
+    def __init__(self, args: list[str] = None) -> None:
         if self.args is None:
             self.args = []
+        if args is None:
+            return
 
         for arg in args:
             if arg is None:

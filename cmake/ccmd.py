@@ -55,8 +55,6 @@ class CMakeCommand(ABC):
                     raise ValueError('Invalid value type for option "' + option.name + '": '
                                      + value.type)
 
-        return
-
     def compile(self) -> list[str]:
         """
             Compiles each option value into a single list of arguments

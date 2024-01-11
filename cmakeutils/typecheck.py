@@ -22,16 +22,10 @@ def isdict(obj: object, key: type, value: type) -> bool:
     valuetypes = list(set(filter(lambda v: v is not None, obj.values())))
 
     if len(keytypes) == 1 and len(valuetypes) == 0:
-        if isinstance(keytypes[0], key):
-            return True
-        else:
-            return False
-    elif len(keytypes) == 0 and len(valuetypes) == 1:
-        if isinstance(valuetypes[0], value):
-            return True
-        else:
-            return False
-    elif len(keytypes) >= 2 and len(valuetypes) >= 2:
+        return isinstance(keytypes[0], key)
+    if len(keytypes) == 0 and len(valuetypes) == 1:
+        return isinstance(valuetypes[0], value)
+    if len(keytypes) >= 2 and len(valuetypes) >= 2:
         return False
 
     ktype = type(keytypes[0])

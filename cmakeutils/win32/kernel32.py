@@ -28,7 +28,7 @@ SearchMode = wc.SearchMode
 
 ErrCodes = werr.Win32ErrorCodes
 
-def LocalAlloc(sizeinbytes: wc.SIZE_T, options: AllocOptions = 
+def LocalAlloc(sizeinbytes: wc.SIZE_T, options: AllocOptions =
                AllocOptions.AL_FIXED | AllocOptions.AL_ZEROINIT) -> wt.HLOCAL:
     """
         Allocates a certain amount of bytes in memory according to options.
@@ -37,7 +37,7 @@ def LocalAlloc(sizeinbytes: wc.SIZE_T, options: AllocOptions =
     if sizeinbytes <= 0:
         raise ct.WinError(ErrCodes.ERROR_INVALID_PARAMETER, 'Invalid parameter.')
 
-    localalloc = __GetKernel32().LocalAlloc
+    localalloc = __getkrnl32().LocalAlloc
     localalloc.argtypes = [
         wt.UINT,
         wc.SIZE_T
@@ -55,7 +55,7 @@ def LocalFree(ptr: wt.HLOCAL) -> wt.HLOCAL:
         Free memory allocated from LocalAlloc
     """
 
-    localfree = __GetKernel32().LocalFree
+    localfree = __getkrnl32().LocalFree
     localfree.argtypes = [
         wt.HLOCAL
     ]
@@ -71,7 +71,7 @@ def FormatMessage(source: FormatSource, srcinput: (str | ct.WinDLL) = None,
         whether from the system, a module or a string.
     """
 
-    formatmsg = __GetKernel32().FormatMessageW
+    formatmsg = __getkrnl32().FormatMessageW
     formatmsg.argtypes = [
         wt.DWORD,
         wt.LPCVOID,
@@ -161,7 +161,7 @@ def GetLastError() -> wt.DWORD:
         Get system last error.
     """
 
-    getlasterror = __GetKernel32().GetLastError
+    getlasterror = __getkrnl32().GetLastError
     getlasterror.argtypes = []
     getlasterror.restype = wt.DWORD
     return getlasterror()
@@ -171,7 +171,7 @@ def SetSearchPathMode(mode: SearchMode) -> wt.BOOL:
         Set if enable or disable search safe.
     """
 
-    set_search_path_mode = __GetKernel32().SetSearchPathMode
+    set_search_path_mode = __getkrnl32().SetSearchPathMode
 
     set_search_path_mode.argtypes = [
         wt.DWORD
@@ -203,7 +203,7 @@ def SearchPath(filename: str, ext: str = None, path: str = None) -> tuple[str, s
     filepart: wt.LPWSTR = wt.LPWSTR()
     lpfilepart = ct.byref(filepart)
 
-    search = __GetKernel32().SearchPathW
+    search = __getkrnl32().SearchPathW
     search.argtypes = [
         wt.LPCWSTR,
         wt.LPCWSTR,
@@ -230,7 +230,7 @@ def SearchPath(filename: str, ext: str = None, path: str = None) -> tuple[str, s
     _filepath = (buffer.value, filepart.value)
     return _filepath
 
-def __GetKernel32() -> ct.WinDLL:
+def __getkrnl32() -> ct.WinDLL:
     if not pc.iswindows():
         raise OSError('Cannot use Kernel32 in a different system!')
 

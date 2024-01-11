@@ -10,8 +10,9 @@
 
 
 """
-from enum import Enum
+import dataclasses
 
+from enum import Enum
 from cmakeutils.typecheck import isdict
 
 
@@ -26,7 +27,7 @@ class CMakeValType(Enum):
     # Non-official cmake types
     VARDICT = 3
 
-
+@dataclasses.dataclass
 class CMakeValue:
 
     """

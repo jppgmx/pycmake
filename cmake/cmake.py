@@ -88,7 +88,7 @@ class CMakeInst:
         env = {**self.environ, **(self.scopeenviron if self.scopeenviron is not None else {})}
 
         spaths = self.scopepaths if self.scopepaths is not None else []
-        newpaths = f'{env['PATH']}{os.pathsep}{os.pathsep.join(spaths)}'
+        newpaths = env['PATH'] + os.pathsep + os.pathsep.join(spaths)
         env['PATH'] = newpaths
         internal_logger.log('Invoking cmake executable with arguments: \n[\n    ' +
                             '\n    '.join(args) + '\n]')
@@ -96,18 +96,20 @@ class CMakeInst:
             args, bufsize=1, stdout=sp.PIPE, stderr=sp.PIPE, env=env
         )
 
-        stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
-        stdprocessor = Thread(
-            name=stdthreadname,
-            args=[proc, self.scopeworkers, stdthreadname],
-            daemon=True,
-            target=self.__doprocess_outputs
-        )
+        with proc:
+            stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
+            stdprocessor = Thread(
+                name=stdthreadname,
+                args=[proc, self.scopeworkers, stdthreadname],
+                daemon=True,
+                target=self.__doprocess_outputs
+            )
 
-        internal_logger.log('Starting ' + stdprocessor.name + ' and waiting executable finishes...')
-        stdprocessor.start()
-        proc.wait()
-        stdprocessor.join()
+            internal_logger.log('Starting ' + stdprocessor.name +
+                                ' and waiting executable finishes...')
+            stdprocessor.start()
+            proc.wait()
+            stdprocessor.join()
 
         internal_logger.log('Cleaning workers...')
         self.scopeworkers.clear()
@@ -183,10 +185,14 @@ class CMakeInst:
 
         return self
 
-    def __doprocess_outputs(self, process: sp.Popen, workers, name):
+    def __doprocess_outputs(self, process, workers, name):
 
-        stdoutlines = []
-        stderrlines = []
+        def __keep_reading() -> (bool, str, str):
+            out = next(outiter, None)
+            err = next(erriter, None)
+            keep = out is not None and err is not None
+
+            return (keep, out, err)
 
         internal_logger.log(f'({name}) -> Listening output...')
 
@@ -196,12 +202,10 @@ class CMakeInst:
         outiter = iter(stdoutlines)
         erriter = iter(stderrlines)
 
-        while (outline := next(outiter, None)) is not None or (errline := next(erriter, None)) is not None:
+        while (pipe := __keep_reading())[0]:
 
-            if outline is None:
-                outline = b''
-            if errline is None:
-                errline = b''
+            outline = b'' if pipe[1] is None else pipe[1]
+            errline = b'' if pipe[2] is None else pipe[2]
 
             if outline != b'':
                 internal_logger.log(f'({name}) -> {str(outline)}')
@@ -210,9 +214,7 @@ class CMakeInst:
 
             for wk in (workers if workers is not None else []):
                 if outline != b'':
-                    out = str(outline)
-
-                    wk.onprocess(stdoutlines, out)
+                    wk.onprocess(stdoutlines, str(outline))
 
                 if errline != b'':
                     err = str(errline)

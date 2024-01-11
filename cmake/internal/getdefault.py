@@ -19,7 +19,7 @@ def cmake_get_default(options: cmake.options.CMakeInitOptions):
         Searches for cmake.
     """
 
-    internal_logger.log('The module will search for the cmake executable' + 
+    internal_logger.log('The module will search for the cmake executable' +
                         'according to the current system specifications.')
     default = None
 
@@ -49,9 +49,9 @@ def __testexec(fl) -> tuple[bool, str]:
                         'Make sure that the executable to be started is actually from cmake.', 
                         internal_logger.WARN)
 
-    proc = Popen(args=[fl, '--version'], stdout=PIPE, stderr=PIPE)
-    (out, _) = proc.communicate()
-    proc.wait()
+    with Popen(args=[fl, '--version'], stdout=PIPE, stderr=PIPE) as proc:
+        (out, _) = proc.communicate()
+        proc.wait()
 
     internal_logger.log(f'Return Code: {proc.returncode}')
     if proc.returncode != 0:
@@ -67,7 +67,7 @@ def __testexec(fl) -> tuple[bool, str]:
     if not first_digit:
         internal_logger.log('Failed! Expected a number.', internal_logger.ERROR)
         raise RuntimeError('Could not process the version of cmake.')
-    
+
     beginver = first[first_digit.start():]
     from_proc_version = ''
 
@@ -110,7 +110,7 @@ def __internalsearchpath(tofind: str, possiblepath: str):
             internal_logger.log('Make sure the executable is inside the PATH environment variable.',
                                 internal_logger.ERROR)
             internal_logger.log('The PATH variable contains the following:\n   ' +
-                                f'{'\n   '.join(paths)}')
+                                f'{"\n   ".join(paths)}')
             raise err
 
     return result
