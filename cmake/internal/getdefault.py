@@ -10,12 +10,12 @@ import os
 import re
 
 from subprocess import Popen, PIPE
-from cmake import options
-from cmake import cmake
+from cmake import coptions
+from cmake import cinstance
 
 from cmakeutils import platcheck as pc, win32, logging as internal_logger
 
-def cmake_get_default(_options: options.CMakeInitOptions):
+def cmake_get_default(_options: coptions.CMakeInitOptions):
     """
         Searches for cmake.
     """
@@ -39,7 +39,7 @@ def cmake_get_default(_options: options.CMakeInitOptions):
                         f' the supposed cmake executable is "{cmake_path}"')
 
     if (test_exec_result := __testexec(cmake_path))[0]:
-        default = cmake.CMakeInst(cmake_path, test_exec_result[1])
+        default = cinstance.CMakeInst(cmake_path, test_exec_result[1])
 
     return default
 

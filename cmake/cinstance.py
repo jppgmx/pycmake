@@ -17,7 +17,7 @@ import cmake.ccmd as cc
 
 from cmakeutils import logging as internal_logger
 
-from cmake.options import CMakeRawOptions
+from cmake.coptions import CMakeRawOptions
 
 class CMakeWorker(ABC):
     """

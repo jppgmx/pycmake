@@ -21,8 +21,8 @@ import cmakeutils
 
 import cmakeutils.platcheck as pc
 
-from . import cmake
-from . import options
+from . import cinstance
+from . import coptions
 from . import cbasic
 from . import ccmd
 from . import cconstants
@@ -32,9 +32,9 @@ from . import internal
 if not pc.iswindows():
     raise NotImplementedError('Not implemented for platform: ' + p.system())
 
-CMake = cmake.CMakeInst
-CMakeWorker = cmake.CMakeWorker
-CMakeInitializeOptions = options.CMakeInitOptions
+CMake = cinstance.CMakeInst
+CMakeWorker = cinstance.CMakeWorker
+CMakeInitializeOptions = coptions.CMakeInitOptions
 
 CMakeConfigureCommand = ccmd.CMakeConfigure
 CMakeBuildCommand = ccmd.CMakeBuildCommand
@@ -42,7 +42,7 @@ CMakeInstallCommand = ccmd.CMakeInstallCommand
 
 CMakeValue = cbasic.CMakeValue
 CMakeValueType = cbasic.CMakeValType
-CMakeRawCommandArgs = options.CMakeRawOptions
+CMakeRawCommandArgs = coptions.CMakeRawOptions
 
 CMakeConstants = cconstants
 
@@ -55,20 +55,20 @@ def cminit(_options: CMakeInitializeOptions = CMakeInitializeOptions()):
     specifying the file where it will be logged and a custom path to cmake.
     """
 
-    if cmake.__defaultCmake__ is not None:
+    if cinstance.__defaultCmake__ is not None:
         return
 
     if _options.enablelogging:
         cmakeutils.logging.loginit(_options.logfile)
 
-    cmake.__defaultCmake__ = internal.getdefault.cmake_get_default(options)
+    cinstance.__defaultCmake__ = internal.getdefault.cmake_get_default(coptions)
 
 def cmdefault() -> CMake:
     """
     Gets an initialized instance of cmake.
     """
 
-    if cmake.__defaultCmake__ is None:
+    if cinstance.__defaultCmake__ is None:
         raise RuntimeError('CMake not initalized!')
 
-    return cmake.__defaultCmake__
+    return cinstance.__defaultCmake__

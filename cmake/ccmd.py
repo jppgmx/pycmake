@@ -11,8 +11,10 @@
 from abc import ABC, abstractmethod
 
 from cmake.cbasic import CMakeValType, CMakeValue
-from cmake import options as ops
-from cmake.options import CMakeBaseOption
+from cmake import coptions as ops
+from cmake.coptions import CMakeBaseOption
+
+from cmakeutils.typecheck import isdict
 
 class CMakeCommand(ABC):
     """
@@ -67,6 +69,42 @@ class CMakeCommand(ABC):
             _args += compval
 
         return _args
+
+    def __getitem__(self, key: str) -> str | bool | dict[str, CMakeValue]:
+        if not isinstance(key, str):
+            raise ValueError('key must be a str.')
+
+        selop = None
+        for option in self.__options__:
+            if option.name.lower() == key.lower():
+                selop = option
+                break
+
+        if selop is None:
+            raise KeyError('option not found: ' + key)
+
+        opvalue = self.__options__[selop]
+        return None if opvalue is None else opvalue.value
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, (str, bool)) and not isdict(value, str, CMakeValue):
+            raise ValueError('value must be a str, bool or dict[str, str].')
+
+        selop = None
+        for option in self.__options__:
+            if option.name.lower() == key.lower():
+                selop = option
+                break
+
+        if selop is None:
+            raise KeyError('option not found: ' + key)
+
+        val = CMakeValue(value)
+        if selop.type != val.type:
+            raise ValueError('Incompatible types between option ' + selop.name +
+                             f'({selop.type}) and value ({val.type}).')
+
+        self.__options__[selop] = val
 
 class CMakeConfigure(CMakeCommand):
     """
