@@ -113,5 +113,7 @@ def __internalsearchpath(tofind: str, possiblepath: str):
             internal_logger.log('The PATH variable contains the following:\n   ' +
                                 '\n   '.join(paths))
             raise err
+    else:
+        raise RuntimeError('The package is only available for the Windows platform.')
 
     return result
