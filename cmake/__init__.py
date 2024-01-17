@@ -61,7 +61,7 @@ def cminit(_options: CMakeInitializeOptions = CMakeInitializeOptions()):
     if _options.enablelogging:
         cmakeutils.logging.loginit(_options.logfile)
 
-    cinstance.__defaultCmake__ = internal.getdefault.cmake_get_default(coptions)
+    cinstance.__defaultCmake__ = internal.getdefault.cmake_get_default(_options)
 
 def cmdefault() -> CMake:
     """

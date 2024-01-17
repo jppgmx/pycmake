@@ -150,7 +150,7 @@ class CMakeRawOptions:
         Correct:
             ['--foo', 'Bar']
     """
-    args: list[str]
+    args: list[str] = None
 
     def __init__(self, args: list[str] = None) -> None:
         if self.args is None:
