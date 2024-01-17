@@ -7,7 +7,7 @@
 import dataclasses
 
 from abc import ABC, abstractmethod
-from cmake.cbasic import CMakeValType, CMakeValue
+from cmake.cbasic import CMakeValType, CMakeValue, castbool
 
 @dataclasses.dataclass
 class CMakeInitOptions:
@@ -49,7 +49,7 @@ class CMakeSimpleOption(CMakeBaseOption):
         if value is None:
             val = self.default
 
-        valstr = str(val.value).upper() if val.type == CMakeValType.BOOL else f'"{str(val.value)}"'
+        valstr = castbool(val.value) if val.type == CMakeValType.BOOL else f'"{str(val.value)}"'
         ssep = '<#-nl-#>'
 
         optstring = self.format.format(
@@ -100,13 +100,16 @@ class CMakeVariablesOption(CMakeBaseOption):
             raise ValueError('Invalid value: ' + value.value)
 
         for key, val in value.value.items():
+            _value = val.value
             if self.cmdoption == '-U':
-                val = ''
-            else:
-                raise ValueError(f'Variable {key} is empty!')
+                _value = ''
 
-            valstr = str(val.value)
-            valstr2 = valstr.upper() if val.type == CMakeValType.BOOL else f'"{valstr}"'
+            if val is None:
+                raise ValueError(f'Variable {key} is empty!')
+            if val.type == CMakeValType.VARDICT:
+                raise ValueError('Invalid value type: VARDICT')
+
+            valstr2 = castbool(_value) if val.type == CMakeValType.BOOL else f'"{_value}"'
 
             vars.append( self.format.format(
                 option=self.cmdoption,

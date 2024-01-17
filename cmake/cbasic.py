@@ -51,3 +51,6 @@ class CMakeValue:
             self.type = CMakeValType.VARDICT
         else:
             raise ValueError('Value not supported -> ' + str(vtype))
+
+def castbool(boolean: bool):
+    return 'ON' if boolean else 'OFF'
