@@ -33,7 +33,13 @@ class CMakeCommand(ABC):
         for key, val in kwargs.items():
             for def_op in self.__options__.keys():
                 if key == def_op.name:
-                    value = CMakeValue(val)
+                    if type(val) == dict:
+                        val2 = {}
+                        for k1, v1 in val.items():
+                            val2[k1] = CMakeValue(v1)
+                    else:
+                        val2 = val
+                    value = CMakeValue(val2)
                     if def_op.type != value.type:
                         raise ValueError(f'Incompatible types between value ({value.type})' +
                                          f'and option {def_op.name} ({def_op.type})')
@@ -193,7 +199,7 @@ class CMakeBuildCommand(CMakeCommand):
     def get_options(self) -> dict[ops.CMakeBaseOption,]:
         return {
             ops.CMakeSimpleOption('build_path', '--build',
-                                  '{option}{ssp}{value}', CMakeValType.STRING, '.'): None,
+                                  '{option}{ssp}{q}{value}{q}', CMakeValType.STRING, '.'): None,
 
             ops.CMakeOptionalSimpleOption('max_jobs', '-j',
                                           '{option}{ssp}{value}', CMakeValType.STRING): None,
@@ -229,7 +235,7 @@ class CMakeInstallCommand(CMakeCommand):
     def get_options(self) -> dict[CMakeBaseOption,]:
         return {
             ops.CMakeSimpleOption('install_path', '--install',
-                                  '{option}{ssp}{value}', CMakeValType.STRING, '_install'): None,
+                                  '{option}{ssp}{q}{value}{q}', CMakeValType.STRING, '_install'): None,
 
             ops.CMakeOptionalSimpleOption('configuration', '--config',
                                           '{option}{ssp}{value}', CMakeValType.STRING): None,
@@ -241,7 +247,7 @@ class CMakeInstallCommand(CMakeCommand):
                                           '{option}{ssp}{value}', CMakeValType.STRING): None,
 
             ops.CMakeOptionalSimpleOption('prefix', '--prefix',
-                                          '{option}{ssp}{value}', CMakeValType.STRING): None,
+                                          '{option}{ssp}{q}{value}{q}', CMakeValType.STRING): None,
 
             ops.CMakeSwitchOption('verbose', '-v', False): None,
             ops.CMakeSwitchOption('strip', '--strip', False): None
