@@ -21,7 +21,7 @@ def cmake_get_default(_options: coptions.CMakeInitOptions):
     """
 
     internal_logger.log('The module will search for the cmake executable' +
-                        'according to the current system specifications.')
+                        ' according to the current system specifications.')
     default = None
 
     pathsep = os.pathsep

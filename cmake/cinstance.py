@@ -36,18 +36,6 @@ class CMakeWorker(ABC):
         """
 
     @abstractmethod
-    def onerror(self, totallines: list[str], currentln: str):
-        """
-            Gets the current line and all lines from stderr with filter for errors.
-        """
-
-    @abstractmethod
-    def onwarn(self, totallines: list[str], currentln: str):
-        """
-            Gets the current line and all lines from stderr with filter for warnings.
-        """
-
-    @abstractmethod
     def retcode(self, code: int):
         """
             Gets the executable's return code.
@@ -81,7 +69,7 @@ class CMakeInst:
 
         internal_logger.log('Validating arguments...')
         command.validate()
-        args = [self.executablepath]
+        args = []
         args += command.compile()
         args += rawargs.args
 
@@ -92,11 +80,10 @@ class CMakeInst:
         env['PATH'] = newpaths
         internal_logger.log('Invoking cmake executable with arguments: \n[\n    ' +
                             '\n    '.join(args) + '\n]')
-        proc = sp.Popen(
-            args, bufsize=1, stdout=sp.PIPE, stderr=sp.PIPE, env=env
-        )
 
-        with proc:
+        with sp.Popen(
+            args, executable=self.executablepath, stdout=sp.PIPE, stderr=sp.STDOUT, env=env
+        ) as proc:
             stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
             stdprocessor = Thread(
                 name=stdthreadname,
@@ -174,60 +161,46 @@ class CMakeInst:
         if self.scopepaths is None:
             self.scopepaths = []
 
-        toadd = []
-
-        for path in paths:
-            for spath in self.scopepaths:
-                if path.lower() != spath.lower():
-                    toadd.append(path)
-
-        self.scopepaths += toadd
+        self.scopepaths += list(
+            filter(
+                lambda p: p is not None and p != '' and os.path.isdir(p),
+                paths
+                )
+            )
 
         return self
 
     def __doprocess_outputs(self, process, workers, name):
 
-        def __keep_reading() -> (bool, str, str):
-            out = next(outiter, None)
-            err = next(erriter, None)
-            keep = out is not None and err is not None
+        def __keep_reading() -> (bool, str):
+            out = process.stdout.readline()
+            process.stdout.flush()
+            keep = out != b''
 
-            return (keep, out, err)
+            return (keep, out)
 
         internal_logger.log(f'({name}) -> Listening output...')
 
-        stdoutlines = process.stdout.readlines()
-        stderrlines = process.stderr.readlines()
-
-        outiter = iter(stdoutlines)
-        erriter = iter(stderrlines)
+        stdoutlines = []
 
         while (pipe := __keep_reading())[0]:
 
-            outline = b'' if pipe[1] is None else pipe[1]
-            errline = b'' if pipe[2] is None else pipe[2]
+            outline = (b'' if pipe[1] is None else pipe[1]).decode()
 
-            if outline != b'':
-                internal_logger.log(f'({name}) -> {str(outline)}')
-            if errline != b'':
-                internal_logger.log(f'({name}) -> {str(errline)}')
+            stdoutlines.append(outline)
+
+            if outline != '':
+                internal_logger.log(f'({name}) -> {outline}')
 
             for wk in (workers if workers is not None else []):
-                if outline != b'':
-                    wk.onprocess(stdoutlines, str(outline))
-
-                if errline != b'':
-                    err = str(errline)
-
-                    onlevel = wk.onerror if err.startswith('CMake Error:') else wk.onwarn
-                    onlevel(stderrlines, err)
+                if outline != '':
+                    wk.onprocess(stdoutlines, outline)
 
         internal_logger.log(f'({name}) -> Process ended with code {process.returncode}')
         for wk in (workers if workers is not None else []):
             wk.retcode(process.returncode)
 
         stdoutlines.clear()
-        stderrlines.clear()
 
 
 __defaultCmake__: CMakeInst = None
