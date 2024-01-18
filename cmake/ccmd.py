@@ -33,7 +33,7 @@ class CMakeCommand(ABC):
         for key, val in kwargs.items():
             for def_op in self.__options__.keys():
                 if key == def_op.name:
-                    if type(val) == dict:
+                    if isinstance(val, dict):
                         val2 = {}
                         for k1, v1 in val.items():
                             val2[k1] = CMakeValue(v1)
@@ -235,7 +235,7 @@ class CMakeInstallCommand(CMakeCommand):
     def get_options(self) -> dict[CMakeBaseOption,]:
         return {
             ops.CMakeSimpleOption('install_path', '--install',
-                                  '{option}{ssp}{q}{value}{q}', CMakeValType.STRING, '_install'): None,
+                                  '{option}{ssp}{value}', CMakeValType.STRING, '_install'): None,
 
             ops.CMakeOptionalSimpleOption('configuration', '--config',
                                           '{option}{ssp}{value}', CMakeValType.STRING): None,

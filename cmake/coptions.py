@@ -4,6 +4,10 @@
    Copyright (c) 2023 jppgmx
    Licensed under MIT License
 """
+# pylint: disable-msg=W0246
+# -> Note: Certain classes based on CMakeBaseOption define __eq__, __ne__ and __hash__ again
+#          to be recognized as Hashable types, even if they were defined in the base class.
+
 import dataclasses
 
 from abc import ABC, abstractmethod
@@ -41,11 +45,12 @@ class CMakeBaseOption(ABC):
         if not isinstance(__value, CMakeBaseOption):
             return False
 
-        return self.name == __value.name and self.cmdoption == __value.cmdoption and self.type == __value.type
+        return (self.name == __value.name and
+                self.cmdoption == __value.cmdoption and self.type == __value.type)
 
     def __ne__(self, __value: object) -> bool:
-        return not (self == __value)
-    
+        return not self == __value
+
     def __hash__(self) -> int:
         return hash((self.name, self.cmdoption, self.type))
 
@@ -76,13 +81,13 @@ class CMakeSimpleOption(CMakeBaseOption):
             return optstring.split('<#-nl-#>')
 
         return optstring
-    
+
     def __eq__(self, __value: object) -> bool:
         return super().__eq__(__value)
-    
+
     def __ne__(self, __value: object) -> bool:
         return super().__ne__(__value)
-    
+
     def __hash__(self) -> int:
         return super().__hash__()
 
@@ -99,13 +104,13 @@ class CMakeOptionalSimpleOption(CMakeSimpleOption):
         if self.default is None:
             return []
         return super().compile(value)
-    
+
     def __eq__(self, __value: object) -> bool:
         return super().__eq__(__value)
-    
+
     def __ne__(self, __value: object) -> bool:
         return super().__ne__(__value)
-    
+
     def __hash__(self) -> int:
         return super().__hash__()
 
@@ -151,13 +156,13 @@ class CMakeVariablesOption(CMakeBaseOption):
             ) )
 
         return _vars
-    
+
     def __eq__(self, __value: object) -> bool:
         return super().__eq__(__value)
-    
+
     def __ne__(self, __value: object) -> bool:
         return super().__ne__(__value)
-    
+
     def __hash__(self) -> int:
         return super().__hash__()
 
@@ -178,13 +183,13 @@ class CMakeSwitchOption(CMakeSimpleOption):
             return []
 
         return super().compile(value)
-    
+
     def __eq__(self, __value: object) -> bool:
         return super().__eq__(__value)
-    
+
     def __ne__(self, __value: object) -> bool:
         return super().__ne__(__value)
-    
+
     def __hash__(self) -> int:
         return super().__hash__()
 

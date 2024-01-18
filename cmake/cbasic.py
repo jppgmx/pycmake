@@ -55,18 +55,21 @@ class CMakeValue:
             self.type = CMakeValType.VARDICT
         else:
             raise ValueError('Value not supported -> ' + str(vtype))
-        
+
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, CMakeValue):
             return False
-        
+
         return self.type == __value.type and self.value == self.value
-    
+
     def __ne__(self, __value: object) -> bool:
         return not self == __value
-    
+
     def __hash__(self) -> int:
         return hash((self.type, self.value))
 
 def castbool(boolean: bool):
+    """
+        Convert boolean to cmake ON/OFF.
+    """
     return 'ON' if boolean else 'OFF'
