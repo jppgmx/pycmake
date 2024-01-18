@@ -18,17 +18,25 @@ def isdict(obj: object, key: type, value: type) -> bool:
     if len(obj) == 0:
         return True
 
-    keytypes = list(set(filter(lambda k: k is not None, obj.keys())))
-    valuetypes = list(set(filter(lambda v: v is not None, obj.values())))
+    keytypes = list(
+        set(
+            [type(k) for k in filter(lambda k: k is not None, obj.keys())]
+            )
+        )
+    valuetypes = list(
+        set(
+            [type(v) for v in filter(lambda v: v is not None, obj.values())]
+            )
+        )
 
     if len(keytypes) == 1 and len(valuetypes) == 0:
-        return isinstance(keytypes[0], key)
+        return keytypes[0] == key
     if len(keytypes) == 0 and len(valuetypes) == 1:
-        return isinstance(valuetypes[0], value)
+        return valuetypes[0] == value
     if len(keytypes) >= 2 and len(valuetypes) >= 2:
         return False
 
-    ktype = type(keytypes[0])
-    vtype = type(valuetypes[0])
+    ktype = keytypes[0]
+    vtype = valuetypes[0]
 
     return ktype == key and vtype == value
