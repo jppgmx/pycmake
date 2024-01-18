@@ -37,6 +37,18 @@ class CMakeBaseOption(ABC):
             Constructs the option with value in the form of a string or a list of strings.
         """
 
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, CMakeBaseOption):
+            return False
+
+        return self.name == __value.name and self.cmdoption == __value.cmdoption and self.type == __value.type
+
+    def __ne__(self, __value: object) -> bool:
+        return not (self == __value)
+    
+    def __hash__(self) -> int:
+        return hash((self.name, self.cmdoption, self.type))
+
 @dataclasses.dataclass
 class CMakeSimpleOption(CMakeBaseOption):
     """
@@ -49,20 +61,30 @@ class CMakeSimpleOption(CMakeBaseOption):
         if value is None:
             val = self.default
 
-        valstr = castbool(val.value) if val.type == CMakeValType.BOOL else f'"{str(val.value)}"'
+        valstr = castbool(val.value) if val.type == CMakeValType.BOOL else f'{str(val.value)}'
         ssep = '<#-nl-#>'
 
         optstring = self.format.format(
             option=self.cmdoption,
             type=self.type.name.upper(),
             value=valstr,
-            ssp=ssep
+            ssp=ssep,
+            q=('"' if ' ' in valstr else '')
             )
 
         if ssep in optstring:
             return optstring.split('<#-nl-#>')
 
         return optstring
+    
+    def __eq__(self, __value: object) -> bool:
+        return super().__eq__(__value)
+    
+    def __ne__(self, __value: object) -> bool:
+        return super().__ne__(__value)
+    
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 @dataclasses.dataclass
 class CMakeOptionalSimpleOption(CMakeSimpleOption):
@@ -77,6 +99,15 @@ class CMakeOptionalSimpleOption(CMakeSimpleOption):
         if self.default is None:
             return []
         return super().compile(value)
+    
+    def __eq__(self, __value: object) -> bool:
+        return super().__eq__(__value)
+    
+    def __ne__(self, __value: object) -> bool:
+        return super().__ne__(__value)
+    
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 @dataclasses.dataclass
 class CMakeVariablesOption(CMakeBaseOption):
@@ -109,16 +140,26 @@ class CMakeVariablesOption(CMakeBaseOption):
             if val.type == CMakeValType.VARDICT:
                 raise ValueError('Invalid value type: VARDICT')
 
-            valstr2 = castbool(_value) if val.type == CMakeValType.BOOL else f'"{_value}"'
+            valstr = castbool(_value) if val.type == CMakeValType.BOOL else f'{_value}'
 
-            vars.append( self.format.format(
+            _vars.append( self.format.format(
                 option=self.cmdoption,
                 varname=key.upper(),
                 type=val.type.name.upper(),
-                value=valstr2
+                value=valstr,
+                q=('"' if ' ' in valstr else '')
             ) )
 
-        return vars
+        return _vars
+    
+    def __eq__(self, __value: object) -> bool:
+        return super().__eq__(__value)
+    
+    def __ne__(self, __value: object) -> bool:
+        return super().__ne__(__value)
+    
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 @dataclasses.dataclass
 class CMakeSwitchOption(CMakeSimpleOption):
@@ -137,6 +178,15 @@ class CMakeSwitchOption(CMakeSimpleOption):
             return []
 
         return super().compile(value)
+    
+    def __eq__(self, __value: object) -> bool:
+        return super().__eq__(__value)
+    
+    def __ne__(self, __value: object) -> bool:
+        return super().__ne__(__value)
+    
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 @dataclasses.dataclass
 class CMakeRawOptions:

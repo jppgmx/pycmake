@@ -13,8 +13,9 @@
 import dataclasses
 
 from enum import Enum
-from cmakeutils.typecheck import isdict
+import os
 
+from cmakeutils.typecheck import isdict
 
 class CMakeValType(Enum):
     """
@@ -23,9 +24,10 @@ class CMakeValType(Enum):
 
     BOOL = 1
     STRING = 2
+    FILEPATH = 3
 
     # Non-official cmake types
-    VARDICT = 3
+    VARDICT = 4
 
 @dataclasses.dataclass
 class CMakeValue:
@@ -45,12 +47,26 @@ class CMakeValue:
 
         if vtype is str:
             self.type = CMakeValType.STRING
+            if os.path.isfile(value):
+                self.type = CMakeValType.FILEPATH
         elif vtype is bool:
             self.type = CMakeValType.BOOL
         elif isdict(value, str, CMakeValue):
             self.type = CMakeValType.VARDICT
         else:
             raise ValueError('Value not supported -> ' + str(vtype))
+        
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, CMakeValue):
+            return False
+        
+        return self.type == __value.type and self.value == self.value
+    
+    def __ne__(self, __value: object) -> bool:
+        return not self == __value
+    
+    def __hash__(self) -> int:
+        return hash((self.type, self.value))
 
 def castbool(boolean: bool):
     return 'ON' if boolean else 'OFF'
