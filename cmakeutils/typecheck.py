@@ -19,14 +19,10 @@ def isdict(obj: object, key: type, value: type) -> bool:
         return True
 
     keytypes = list(
-        set(
-            [type(k) for k in filter(lambda k: k is not None, obj.keys())]
-            )
+            {type(k) for k in filter(lambda k: k is not None, obj.keys())}
         )
     valuetypes = list(
-        set(
-            [type(v) for v in filter(lambda v: v is not None, obj.values())]
-            )
+            {type(v) for v in filter(lambda v: v is not None, obj.values())}
         )
 
     if len(keytypes) == 1 and len(valuetypes) == 0:

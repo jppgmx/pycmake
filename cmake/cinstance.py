@@ -82,7 +82,9 @@ class CMakeInst:
                             '\n    '.join(args) + '\n]')
 
         with sp.Popen(
-            args, executable=self.executablepath, stdout=sp.PIPE, stderr=sp.STDOUT, env=env
+            args, executable=self.executablepath,
+            stdout=sp.PIPE, stderr=sp.STDOUT,
+            env=sorted(env.items())
         ) as proc:
             stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
             stdprocessor = Thread(
