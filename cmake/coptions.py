@@ -101,7 +101,7 @@ class CMakeOptionalSimpleOption(CMakeSimpleOption):
         super().__init__(name, cmd, fmt, tp, None)
 
     def compile(self, value: CMakeValue) -> str | list[str]:
-        if self.default is None:
+        if value is None:
             return []
         return super().compile(value)
 
@@ -176,6 +176,9 @@ class CMakeSwitchOption(CMakeSimpleOption):
         super().__init__(name, cmd, '{option}', CMakeValType.BOOL, default)
 
     def compile(self, value: CMakeValue) -> str | list[str]:
+        if value is None:
+            return []
+
         if value.type != CMakeValType.BOOL:
             return []
 
