@@ -69,7 +69,7 @@ class CMakeInst:
 
         internal_logger.log('Validating arguments...')
         command.validate()
-        args = []
+        args = [self.executablepath]
         args += command.compile()
         args += rawargs.args
 
@@ -82,9 +82,8 @@ class CMakeInst:
                             '\n    '.join(args) + '\n]')
 
         with sp.Popen(
-            args, executable=self.executablepath,
-            stdout=sp.PIPE, stderr=sp.STDOUT,
-            env=sorted(env.items())
+            args, stdout=sp.PIPE, stderr=sp.STDOUT,
+            env=dict(sorted(env.items()))
         ) as proc:
             stdthreadname = 'pycmake Thread Processor #' + str(random.randint(1, 99))
             stdprocessor = Thread(
@@ -187,7 +186,9 @@ class CMakeInst:
 
         while (pipe := __keep_reading())[0]:
 
-            outline = (b'' if pipe[1] is None else pipe[1]).decode()
+            outline = (b'' if pipe[1] is None else pipe[1]).decode(
+                errors='ignore'
+            )
 
             stdoutlines.append(outline)
 
@@ -203,6 +204,6 @@ class CMakeInst:
             wk.retcode(process.returncode)
 
         stdoutlines.clear()
-
+        process.stdout.close()
 
 __defaultCmake__: CMakeInst = None
